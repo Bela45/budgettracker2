@@ -44,7 +44,7 @@ export default function TransactionList({ transactions, income }: TransactionLis
             </div>
             <div className="flex-1">
               <div className="font-semibold mb-0.5 text-gray-800">{t.category}</div>
-              <div className="text-xs text-gray-500">{t.memo}</div>
+              <div className="text-xs text-gray-500">{new Date(t.date).toLocaleDateString()} - {t.memo}</div>
             </div>
             <div className="font-bold text-base text-gray-800">
               {t.type === 'expense' ? '-' : '+'}{t.amount.toFixed(2)}

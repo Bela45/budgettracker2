@@ -7,7 +7,7 @@ import TransactionList from './components/TransactionList';
 import { Transaction, Tab, UserProfile } from './types';
 import { auth, db } from './firebase';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
-import { collection, query, where, onSnapshot, addDoc, orderBy, doc, getDoc, setDoc } from 'firebase/firestore';
+import { collection, query, where, onSnapshot, addDoc, orderBy, doc, getDoc, setDoc, deleteDoc, getDocs } from 'firebase/firestore';
 
 export default function App() {
   const [user, setUser] = useState<string | null>(null);
@@ -58,7 +58,7 @@ export default function App() {
       return () => unsubscribe();
     } else if (isDemo) {
       // Demo defaults
-      setUserProfile({ budget: 6000, income: 5500 });
+      setUserProfile({ budget: 6000, income: 0 });
     } else {
       setUserProfile({ budget: 0, income: 0 });
     }
@@ -151,10 +151,10 @@ export default function App() {
     }
   };
 
-  const addTransaction = async (newTransaction: Omit<Transaction, 'id' | 'date'>) => {
+  const addTransaction = async (newTransaction: Omit<Transaction, 'id'>) => {
     const transactionData = {
       ...newTransaction,
-      date: new Date().toISOString(),
+      date: newTransaction.date || new Date().toISOString(), // Use provided date or current date
       userId: userId,
       // type is already in newTransaction, do not overwrite it
     };
@@ -190,6 +190,42 @@ export default function App() {
       }
     } else if (isDemo) {
       setUserProfile(prev => ({ ...prev, ...newProfile }));
+    }
+  };
+
+  const resetData = async () => {
+    console.log("Resetting data...");
+    if (!window.confirm("Are you sure you want to reset all expenses and income? This cannot be undone.")) {
+      return;
+    }
+
+    setLoading(true);
+    try {
+      if (userId && !isDemo) {
+        // Delete all transactions
+        const q = query(collection(db, "transactions"), where("userId", "==", userId));
+        const snapshot = await getDocs(q);
+        console.log(`Deleting ${snapshot.size} transactions...`);
+        const deletePromises = snapshot.docs.map(doc => deleteDoc(doc.ref));
+        await Promise.all(deletePromises);
+
+        // Reset user profile
+        const userDocRef = doc(db, "users", userId);
+        await setDoc(userDocRef, { budget: 0, income: 0 });
+        console.log("User profile reset.");
+        
+        alert("Data reset successfully.");
+      } else if (isDemo) {
+        setTransactions([]);
+        setUserProfile({ budget: 6000, income: 0 });
+        localStorage.removeItem('budgetTrackerData_Demo'); // Explicitly remove
+        alert("Data reset successfully.");
+      }
+    } catch (e) {
+      console.error("Error resetting data: ", e);
+      alert("Failed to reset data. Check console for details.");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -247,6 +283,7 @@ export default function App() {
               income={userProfile.income} 
               budget={userProfile.budget} 
               onUpdateProfile={updateProfile}
+              onReset={resetData}
             />
           )}
           {activeTab === 'insights' && <Insights transactions={transactions} />}

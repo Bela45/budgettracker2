@@ -6,9 +6,10 @@ interface ReportsProps {
   income: number;
   budget: number;
   onUpdateProfile?: (profile: Partial<UserProfile>) => void;
+  onReset?: () => void;
 }
 
-export default function Reports({ transactions, income, budget, onUpdateProfile }: ReportsProps) {
+export default function Reports({ transactions, income, budget, onUpdateProfile, onReset }: ReportsProps) {
   const totalExpenses = transactions
     .filter((t) => t.type === 'expense')
     .reduce((sum, t) => sum + t.amount, 0);
@@ -26,18 +27,22 @@ export default function Reports({ transactions, income, budget, onUpdateProfile 
   const handleEdit = () => {
     if (!onUpdateProfile) return;
     
-    const newIncome = prompt("Enter new monthly income:", income.toString());
-    const newBudget = prompt("Enter new monthly budget:", budget.toString());
+    const currentIncome = income.toString();
+    const currentBudget = budget.toString();
 
-    if (newIncome !== null && newBudget !== null) {
-      const parsedIncome = parseFloat(newIncome);
-      const parsedBudget = parseFloat(newBudget);
+    const newIncome = prompt("Enter new BASE monthly income (excluding transactions):", currentIncome);
+    if (newIncome === null) return; // Cancelled
 
-      if (!isNaN(parsedIncome) && !isNaN(parsedBudget)) {
-        onUpdateProfile({ income: parsedIncome, budget: parsedBudget });
-      } else {
-        alert("Invalid numbers entered.");
-      }
+    const newBudget = prompt("Enter new monthly budget:", currentBudget);
+    if (newBudget === null) return; // Cancelled
+
+    const parsedIncome = parseFloat(newIncome);
+    const parsedBudget = parseFloat(newBudget);
+
+    if (!isNaN(parsedIncome) && !isNaN(parsedBudget)) {
+      onUpdateProfile({ income: parsedIncome, budget: parsedBudget });
+    } else {
+      alert("Invalid numbers entered. Please try again.");
     }
   };
 
@@ -46,14 +51,24 @@ export default function Reports({ transactions, income, budget, onUpdateProfile 
       <div className="bg-gray-50 p-5 rounded-xl mb-4">
         <div className="flex justify-between items-center mb-4">
           <h3 className="font-bold text-lg">This Month</h3>
-          {onUpdateProfile && (
-            <button 
-              onClick={handleEdit}
-              className="text-xs bg-gray-200 hover:bg-gray-300 px-2 py-1 rounded text-gray-700 transition-colors"
-            >
-              Edit Budget/Income
-            </button>
-          )}
+          <div className="flex gap-2">
+            {onUpdateProfile && (
+              <button 
+                onClick={handleEdit}
+                className="text-xs bg-gray-200 hover:bg-gray-300 px-2 py-1 rounded text-gray-700 transition-colors"
+              >
+                Edit Budget
+              </button>
+            )}
+            {onReset && (
+              <button 
+                onClick={onReset}
+                className="text-xs bg-red-100 hover:bg-red-200 px-2 py-1 rounded text-red-700 transition-colors"
+              >
+                Reset
+              </button>
+            )}
+          </div>
         </div>
         <div className="text-4xl font-bold text-gray-800 mb-5">{currentMonth}</div>
         <div className="flex justify-around mb-5">

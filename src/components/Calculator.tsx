@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Transaction } from '../types';
 
 interface CalculatorProps {
-  onAddTransaction: (transaction: Omit<Transaction, 'id' | 'date'>) => void;
+  onAddTransaction: (transaction: Omit<Transaction, 'id'>) => void;
 }
 
 const EXPENSE_CATEGORIES = [
@@ -41,6 +41,7 @@ export default function Calculator({ onAddTransaction }: CalculatorProps) {
   const [selectedCategory, setSelectedCategory] = useState<{ name: string; icon: string } | null>(null);
   const [calcValue, setCalcValue] = useState('0');
   const [memo, setMemo] = useState('');
+  const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
 
   const categories = transactionType === 'expense' ? EXPENSE_CATEGORIES : INCOME_CATEGORIES;
 
@@ -74,6 +75,7 @@ export default function Calculator({ onAddTransaction }: CalculatorProps) {
         amount: Number(amount),
         memo: memo || 'No memo',
         type: transactionType,
+        date: new Date(date).toISOString(), // Use selected date
       });
 
       setCalcValue('0');
@@ -138,7 +140,19 @@ export default function Calculator({ onAddTransaction }: CalculatorProps) {
           {['7', '8', '9'].map((n) => (
             <button key={n} onClick={() => appendNumber(n)} className="p-4 border-none rounded-lg bg-white text-lg font-medium hover:bg-gray-100 transition-colors cursor-pointer">{n}</button>
           ))}
-          <button onClick={() => alert(`Today: ${new Date().toLocaleDateString()}`)} className="p-4 border-none rounded-lg bg-white text-xs font-medium hover:bg-gray-100 transition-colors cursor-pointer">📅 Today</button>
+          
+          <div className="relative">
+            <input 
+              type="date" 
+              value={date} 
+              onChange={(e) => setDate(e.target.value)}
+              className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+            />
+            <button className="w-full h-full p-0 border-none rounded-lg bg-white text-xs font-medium hover:bg-gray-100 transition-colors cursor-pointer flex flex-col items-center justify-center">
+              <span>📅</span>
+              <span>{new Date(date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</span>
+            </button>
+          </div>
           
           {['4', '5', '6'].map((n) => (
             <button key={n} onClick={() => appendNumber(n)} className="p-4 border-none rounded-lg bg-white text-lg font-medium hover:bg-gray-100 transition-colors cursor-pointer">{n}</button>
