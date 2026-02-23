@@ -21,28 +21,22 @@ export default function Reports({ transactions, income, budget, onUpdateProfile,
   const totalIncome = income + totalIncomeTransactions;
 
   const balance = totalIncome - totalExpenses;
-  const balancePercent = budget > 0 ? ((balance / budget) * 100).toFixed(2) : '0.00';
   const currentMonth = String(new Date().getMonth() + 1).padStart(2, '0');
 
   const handleEdit = () => {
     if (!onUpdateProfile) return;
     
     const currentIncome = income.toString();
-    const currentBudget = budget.toString();
 
     const newIncome = prompt("Enter new BASE monthly income (excluding transactions):", currentIncome);
     if (newIncome === null) return; // Cancelled
 
-    const newBudget = prompt("Enter new monthly budget:", currentBudget);
-    if (newBudget === null) return; // Cancelled
-
     const parsedIncome = parseFloat(newIncome);
-    const parsedBudget = parseFloat(newBudget);
 
-    if (!isNaN(parsedIncome) && !isNaN(parsedBudget)) {
-      onUpdateProfile({ income: parsedIncome, budget: parsedBudget });
+    if (!isNaN(parsedIncome)) {
+      onUpdateProfile({ income: parsedIncome });
     } else {
-      alert("Invalid numbers entered. Please try again.");
+      alert("Invalid number entered. Please try again.");
     }
   };
 
@@ -57,7 +51,7 @@ export default function Reports({ transactions, income, budget, onUpdateProfile,
                 onClick={handleEdit}
                 className="text-xs bg-gray-200 hover:bg-gray-300 px-2 py-1 rounded text-gray-700 transition-colors"
               >
-                Edit Budget
+                Edit Income
               </button>
             )}
             {onReset && (
@@ -84,22 +78,12 @@ export default function Reports({ transactions, income, budget, onUpdateProfile,
       </div>
 
       <div className="bg-gray-50 p-5 rounded-xl mb-4">
-        <h3 className="mb-4 font-bold text-lg">Monthly Budget</h3>
+        <h3 className="mb-4 font-bold text-lg">Monthly Summary</h3>
         <div className="bg-white p-4 rounded-xl">
-          <div className="w-[100px] h-[100px] rounded-full border-8 border-[#ffd93d] flex flex-col justify-center items-center mx-auto mb-4">
-            <div className="text-center">
-              <div className="text-xs text-gray-500">Balance</div>
-              <div className="text-lg font-bold">{balancePercent}%</div>
-            </div>
-          </div>
           <div className="text-sm">
             <div className="flex justify-between mb-2">
               <span>Balance:</span>
               <strong>{balance.toFixed(2)}</strong>
-            </div>
-            <div className="flex justify-between mb-2">
-              <span>Budget:</span>
-              <strong>{budget.toFixed(2)}</strong>
             </div>
             <div className="flex justify-between mb-2">
               <span>Expenses:</span>
