@@ -80,7 +80,7 @@ export default function LoginScreen({ onLogin }: LoginScreenProps) {
 
   return (
     <div className="p-10 text-center">
-      <h1 className="text-gray-800 mb-2.5 text-3xl font-bold">💰 My Budget Tracker</h1>
+      <h1 className="text-gray-800 mb-2.5 text-3xl font-bold">💰 Budget Central Tracker</h1>
       <p className="text-gray-500 mb-8">Track your expenses and manage your budget</p>
       
       {error && <div className="mb-4 p-3 bg-red-100 text-red-700 rounded-lg text-sm text-left">{error}</div>}

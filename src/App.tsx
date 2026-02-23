@@ -171,7 +171,7 @@ export default function App() {
     <div className="w-full max-w-[450px] bg-white rounded-[20px] shadow-[0_10px_40px_rgba(0,0,0,0.1)] overflow-hidden min-h-[600px] flex flex-col">
       {/* Header */}
       <div className="bg-[#ffd93d] p-5 flex justify-between items-center shadow-sm z-10">
-        <h2 className="text-gray-800 text-xl font-bold m-0">My Budget Tracker</h2>
+        <h2 className="text-gray-800 text-xl font-bold m-0">Budget Central Tracker</h2>
         <div className="flex items-center gap-2.5">
           <span className="font-medium text-sm">{user}</span>
           <button 
