@@ -132,6 +132,11 @@ export default function App() {
           {activeTab === 'transactions' && <TransactionList transactions={transactions} income={INCOME} />}
         </div>
       </div>
+
+      {/* Footer */}
+      <div className="p-3 text-center text-xs text-gray-400 bg-gray-50 border-t border-gray-100">
+        Powered by A.Arrosas
+      </div>
     </div>
   );
 }

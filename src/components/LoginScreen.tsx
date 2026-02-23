@@ -169,6 +169,10 @@ export default function LoginScreen({ onLogin }: LoginScreenProps) {
       </button>
       
       <p className="mt-5 text-xs text-gray-400">Demo: username: demo / password: demo</p>
+      
+      <div className="mt-8 text-xs text-gray-400 font-medium">
+        Powered by A.Arrosas
+      </div>
     </div>
   );
 }
