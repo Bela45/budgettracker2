@@ -5,7 +5,7 @@ interface CalculatorProps {
   onAddTransaction: (transaction: Omit<Transaction, 'id' | 'date'>) => void;
 }
 
-const CATEGORIES = [
+const EXPENSE_CATEGORIES = [
   { name: 'Food', icon: '🍽️' },
   { name: 'Entertainment', icon: '🎬' },
   { name: 'Telephone', icon: '📱' },
@@ -28,10 +28,21 @@ const CATEGORIES = [
   { name: 'Gift', icon: '🎁' },
 ];
 
+const INCOME_CATEGORIES = [
+  { name: 'Salary', icon: '💰' },
+  { name: 'Bonus', icon: '🎉' },
+  { name: 'Gift', icon: '🎁' },
+  { name: 'Investment', icon: '📈' },
+  { name: 'Other', icon: '💵' },
+];
+
 export default function Calculator({ onAddTransaction }: CalculatorProps) {
+  const [transactionType, setTransactionType] = useState<'expense' | 'income'>('expense');
   const [selectedCategory, setSelectedCategory] = useState<{ name: string; icon: string } | null>(null);
   const [calcValue, setCalcValue] = useState('0');
   const [memo, setMemo] = useState('');
+
+  const categories = transactionType === 'expense' ? EXPENSE_CATEGORIES : INCOME_CATEGORIES;
 
   const appendNumber = (num: string) => {
     setCalcValue((prev) => (prev === '0' ? num : prev + num));
@@ -62,12 +73,12 @@ export default function Calculator({ onAddTransaction }: CalculatorProps) {
         icon: selectedCategory.icon,
         amount: Number(amount),
         memo: memo || 'No memo',
-        type: 'expense',
+        type: transactionType,
       });
 
       setCalcValue('0');
       setMemo('');
-      alert(`Added ${selectedCategory.name}: $${amount.toFixed(2)}`);
+      alert(`Added ${transactionType} - ${selectedCategory.name}: $${amount.toFixed(2)}`);
     } catch (error) {
       alert('Invalid calculation');
     }
@@ -75,9 +86,28 @@ export default function Calculator({ onAddTransaction }: CalculatorProps) {
 
   return (
     <div>
+      <div className="flex bg-gray-100 p-1 rounded-xl mb-4">
+        <button
+          onClick={() => { setTransactionType('expense'); setSelectedCategory(null); }}
+          className={`flex-1 py-2 rounded-lg text-sm font-semibold transition-all border-none cursor-pointer ${
+            transactionType === 'expense' ? 'bg-white text-red-500 shadow-sm' : 'text-gray-500 bg-transparent'
+          }`}
+        >
+          Expense
+        </button>
+        <button
+          onClick={() => { setTransactionType('income'); setSelectedCategory(null); }}
+          className={`flex-1 py-2 rounded-lg text-sm font-semibold transition-all border-none cursor-pointer ${
+            transactionType === 'income' ? 'bg-white text-green-500 shadow-sm' : 'text-gray-500 bg-transparent'
+          }`}
+        >
+          Income
+        </button>
+      </div>
+
       <h3 className="mb-4 font-bold text-lg">Select Category</h3>
       <div className="grid grid-cols-4 gap-3 mb-5">
-        {CATEGORIES.map((cat) => (
+        {categories.map((cat) => (
           <button
             key={cat.name}
             onClick={() => setSelectedCategory(cat)}
@@ -94,8 +124,8 @@ export default function Calculator({ onAddTransaction }: CalculatorProps) {
       </div>
 
       <div className="bg-gray-50 p-4 rounded-xl mb-4">
-        <div className="bg-white p-4 rounded-lg text-right text-2xl font-semibold mb-2.5 min-h-[50px]">
-          {calcValue}
+        <div className={`bg-white p-4 rounded-lg text-right text-2xl font-semibold mb-2.5 min-h-[50px] ${transactionType === 'income' ? 'text-green-500' : 'text-red-500'}`}>
+          {transactionType === 'expense' ? '-' : '+'}{calcValue}
         </div>
         <input
           type="text"

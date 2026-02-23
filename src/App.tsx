@@ -4,19 +4,17 @@ import Calculator from './components/Calculator';
 import Reports from './components/Reports';
 import Insights from './components/Insights';
 import TransactionList from './components/TransactionList';
-import { Transaction, Tab } from './types';
+import { Transaction, Tab, UserProfile } from './types';
 import { auth, db } from './firebase';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
-import { collection, query, where, onSnapshot, addDoc, orderBy, Timestamp } from 'firebase/firestore';
-
-const BUDGET = 6000;
-const INCOME = 5500;
+import { collection, query, where, onSnapshot, addDoc, orderBy, doc, getDoc, setDoc } from 'firebase/firestore';
 
 export default function App() {
   const [user, setUser] = useState<string | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<Tab>('calculator');
   const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [userProfile, setUserProfile] = useState<UserProfile>({ budget: 0, income: 0 });
   const [loading, setLoading] = useState(true);
   const [isDemo, setIsDemo] = useState(false);
 
@@ -39,6 +37,32 @@ export default function App() {
 
     return () => unsubscribe();
   }, [isDemo]);
+
+  // Load User Profile (Budget & Income)
+  useEffect(() => {
+    if (userId && !isDemo) {
+      const userDocRef = doc(db, "users", userId);
+      
+      // Real-time listener for user profile
+      const unsubscribe = onSnapshot(userDocRef, async (docSnap) => {
+        if (docSnap.exists()) {
+          setUserProfile(docSnap.data() as UserProfile);
+        } else {
+          // Create default profile if it doesn't exist
+          const defaultProfile: UserProfile = { budget: 0, income: 0 };
+          await setDoc(userDocRef, defaultProfile);
+          setUserProfile(defaultProfile);
+        }
+      });
+
+      return () => unsubscribe();
+    } else if (isDemo) {
+      // Demo defaults
+      setUserProfile({ budget: 6000, income: 5500 });
+    } else {
+      setUserProfile({ budget: 0, income: 0 });
+    }
+  }, [userId, isDemo]);
 
   // Load data from Firestore or LocalStorage
   useEffect(() => {
@@ -132,7 +156,7 @@ export default function App() {
       ...newTransaction,
       date: new Date().toISOString(),
       userId: userId,
-      type: 'expense' // Explicitly set type if missing, though it comes from Calculator
+      // type is already in newTransaction, do not overwrite it
     };
 
     if (userId && !isDemo) {
@@ -152,6 +176,20 @@ export default function App() {
       };
       setTransactions((prev) => [transaction, ...prev]);
       setActiveTab('transactions');
+    }
+  };
+
+  const updateProfile = async (newProfile: Partial<UserProfile>) => {
+    if (userId && !isDemo) {
+      try {
+        const userDocRef = doc(db, "users", userId);
+        await setDoc(userDocRef, { ...userProfile, ...newProfile }, { merge: true });
+      } catch (e) {
+        console.error("Error updating profile: ", e);
+        alert("Failed to update profile.");
+      }
+    } else if (isDemo) {
+      setUserProfile(prev => ({ ...prev, ...newProfile }));
     }
   };
 
@@ -203,9 +241,16 @@ export default function App() {
         {/* Tab Content */}
         <div className="animate-in fade-in duration-300">
           {activeTab === 'calculator' && <Calculator onAddTransaction={addTransaction} />}
-          {activeTab === 'reports' && <Reports transactions={transactions} income={INCOME} budget={BUDGET} />}
+          {activeTab === 'reports' && (
+            <Reports 
+              transactions={transactions} 
+              income={userProfile.income} 
+              budget={userProfile.budget} 
+              onUpdateProfile={updateProfile}
+            />
+          )}
           {activeTab === 'insights' && <Insights transactions={transactions} />}
-          {activeTab === 'transactions' && <TransactionList transactions={transactions} income={INCOME} />}
+          {activeTab === 'transactions' && <TransactionList transactions={transactions} income={userProfile.income} />}
         </div>
       </div>
 

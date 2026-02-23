@@ -9,4 +9,9 @@ export interface Transaction {
   userId?: string;
 }
 
+export interface UserProfile {
+  budget: number;
+  income: number;
+}
+
 export type Tab = 'calculator' | 'reports' | 'insights' | 'transactions';
