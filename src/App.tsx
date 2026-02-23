@@ -58,7 +58,7 @@ export default function App() {
       return () => unsubscribe();
     } else if (isDemo) {
       // Demo defaults
-      setUserProfile({ budget: 6000, income: 0 });
+      setUserProfile({ budget: 0, income: 0 });
     } else {
       setUserProfile({ budget: 0, income: 0 });
     }
@@ -217,7 +217,7 @@ export default function App() {
         alert("Data reset successfully.");
       } else if (isDemo) {
         setTransactions([]);
-        setUserProfile({ budget: 6000, income: 0 });
+        setUserProfile({ budget: 0, income: 0 });
         localStorage.removeItem('budgetTrackerData_Demo'); // Explicitly remove
         alert("Data reset successfully.");
       }

@@ -14,14 +14,18 @@ export default function TransactionList({ transactions, income }: TransactionLis
   const colors = ['#ffcdd2', '#f8bbd0', '#e1bee7', '#c5cae9', '#bbdefb', '#b2dfdb', '#c8e6c9', '#dcedc8'];
 
   // Sort by date descending (newest first)
-  const sortedTransactions = [...transactions].sort((a, b) => b.id - a.id);
+  const sortedTransactions = [...transactions].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
+  const currentDate = new Date();
+  const currentYear = currentDate.getFullYear();
+  const currentMonth = String(currentDate.getMonth() + 1).padStart(2, '0');
 
   return (
     <div>
       <div className="bg-[#ffd93d] p-4 rounded-xl mb-4 flex justify-between items-center text-gray-800 shadow-sm">
         <div>
-          <div className="text-sm opacity-80">2022</div>
-          <div className="text-2xl font-bold">09 ▼</div>
+          <div className="text-sm opacity-80">{currentYear}</div>
+          <div className="text-2xl font-bold">{currentMonth} ▼</div>
         </div>
         <div className="text-right">
           <div className="text-xs opacity-80">Expenses</div>
