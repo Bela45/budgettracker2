@@ -172,7 +172,7 @@ export default function App() {
       const transaction: Transaction = {
         ...transactionData,
         id: Date.now(), // Local ID
-        type: 'expense' as const
+        type: (transactionData as any).type || 'expense' // Ensure type is preserved
       };
       setTransactions((prev) => [transaction, ...prev]);
       setActiveTab('transactions');
