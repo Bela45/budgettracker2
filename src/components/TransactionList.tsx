@@ -4,9 +4,10 @@ import { Transaction } from '../types';
 interface TransactionListProps {
   transactions: Transaction[];
   income: number;
+  onDelete?: (id: string | number) => void;
 }
 
-export default function TransactionList({ transactions, income }: TransactionListProps) {
+export default function TransactionList({ transactions, income, onDelete }: TransactionListProps) {
   const totalExpenses = transactions
     .filter((t) => t.type === 'expense')
     .reduce((sum, t) => sum + t.amount, 0);
@@ -53,6 +54,15 @@ export default function TransactionList({ transactions, income }: TransactionLis
             <div className="font-bold text-base text-gray-800">
               {t.type === 'expense' ? '-' : '+'}{t.amount.toFixed(2)}
             </div>
+            {onDelete && (
+              <button
+                onClick={() => onDelete(t.id)}
+                className="p-2 text-gray-400 hover:text-red-500 transition-colors bg-transparent border-none cursor-pointer"
+                title="Delete Transaction"
+              >
+                🗑️
+              </button>
+            )}
           </div>
         ))}
         {sortedTransactions.length === 0 && (

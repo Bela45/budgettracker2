@@ -229,6 +229,22 @@ export default function App() {
     }
   };
 
+  const deleteTransaction = async (id: string | number) => {
+    if (!window.confirm("Delete this transaction?")) return;
+
+    if (userId && !isDemo) {
+      try {
+        await deleteDoc(doc(db, "transactions", String(id)));
+      } catch (e) {
+        console.error("Error deleting document: ", e);
+        alert("Failed to delete transaction.");
+      }
+    } else {
+      // Demo mode
+      setTransactions((prev) => prev.filter((t) => t.id !== id));
+    }
+  };
+
   if (loading) {
     return <div className="flex justify-center items-center min-h-screen">Loading...</div>;
   }
@@ -287,7 +303,13 @@ export default function App() {
             />
           )}
           {activeTab === 'insights' && <Insights transactions={transactions} />}
-          {activeTab === 'transactions' && <TransactionList transactions={transactions} income={userProfile.income} />}
+          {activeTab === 'transactions' && (
+            <TransactionList 
+              transactions={transactions} 
+              income={userProfile.income} 
+              onDelete={deleteTransaction}
+            />
+          )}
         </div>
       </div>
 
