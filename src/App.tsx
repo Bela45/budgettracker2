@@ -5,17 +5,20 @@ import Reports from './components/Reports';
 import Insights from './components/Insights';
 import TransactionList from './components/TransactionList';
 import { Transaction, Tab } from './types';
-import { auth } from './firebase';
+import { auth, db } from './firebase';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
+import { collection, query, where, onSnapshot, addDoc, orderBy, Timestamp } from 'firebase/firestore';
 
 const BUDGET = 6000;
 const INCOME = 5500;
 
 export default function App() {
   const [user, setUser] = useState<string | null>(null);
+  const [userId, setUserId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<Tab>('calculator');
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isDemo, setIsDemo] = useState(false);
 
   // Monitor Auth State
   useEffect(() => {
@@ -23,60 +26,133 @@ export default function App() {
       console.log("Auth state changed:", currentUser ? "User logged in" : "User logged out");
       if (currentUser) {
         setUser(currentUser.email);
+        setUserId(currentUser.uid);
+        setIsDemo(false);
       } else {
-        // If we are not logged in via Firebase, we might be in Demo mode or logged out.
-        // We don't forcibly clear 'user' here to allow Demo mode to persist if set manually,
-        // UNLESS we want to ensure firebase logout clears everything.
-        // For now, let's leave it as is, but log it.
+        if (!isDemo) {
+          setUser(null);
+          setUserId(null);
+        }
       }
       setLoading(false);
     });
 
     return () => unsubscribe();
-  }, []);
+  }, [isDemo]);
 
-  // Load data from localStorage on mount
+  // Load data from Firestore or LocalStorage
   useEffect(() => {
-    const saved = localStorage.getItem('budgetTrackerData');
-    if (saved) {
-      try {
-        setTransactions(JSON.parse(saved));
-      } catch (e) {
-        console.error('Failed to parse saved data', e);
+    if (userId && !isDemo) {
+      // Firestore mode
+      const q = query(
+        collection(db, "transactions"),
+        where("userId", "==", userId),
+        orderBy("date", "desc") // Ensure you have an index for this if needed, or sort client-side if small data
+      );
+
+      const unsubscribe = onSnapshot(q, (snapshot) => {
+        const loadedTransactions: Transaction[] = [];
+        snapshot.forEach((doc) => {
+          const data = doc.data();
+          loadedTransactions.push({
+            id: doc.id,
+            category: data.category,
+            icon: data.icon,
+            amount: data.amount,
+            memo: data.memo,
+            date: data.date,
+            type: data.type,
+            userId: data.userId
+          });
+        });
+        // Sort again just in case or if index is missing/failed
+        loadedTransactions.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+        setTransactions(loadedTransactions);
+      }, (error) => {
+        console.error("Error fetching transactions: ", error);
+        // Fallback or error handling
+      });
+
+      return () => unsubscribe();
+    } else if (isDemo) {
+      // Demo mode: Load from localStorage
+      const saved = localStorage.getItem('budgetTrackerData_Demo');
+      if (saved) {
+        try {
+          setTransactions(JSON.parse(saved));
+        } catch (e) {
+          console.error('Failed to parse saved data', e);
+        }
+      } else {
+        setTransactions([]);
       }
+    } else {
+      setTransactions([]);
     }
-  }, []);
+  }, [userId, isDemo]);
 
-  // Save data to localStorage whenever it changes
+  // Save data to localStorage (Demo Mode Only)
   useEffect(() => {
-    localStorage.setItem('budgetTrackerData', JSON.stringify(transactions));
-  }, [transactions]);
+    if (isDemo) {
+      localStorage.setItem('budgetTrackerData_Demo', JSON.stringify(transactions));
+    }
+  }, [transactions, isDemo]);
 
   const handleLogin = (username: string) => {
-    setUser(username);
+    if (username === 'Demo User') {
+      setUser('Demo User');
+      setIsDemo(true);
+    } else {
+      // Should be handled by onAuthStateChanged for real users
+    }
   };
 
   const handleLogout = async () => {
-    try {
-      await signOut(auth);
+    if (isDemo) {
       setUser(null);
+      setUserId(null);
+      setIsDemo(false);
       setActiveTab('calculator');
-    } catch (error) {
-      console.error("Error signing out: ", error);
-      // Fallback for demo user
-      setUser(null);
-      setActiveTab('calculator');
+    } else {
+      try {
+        await signOut(auth);
+        setUser(null);
+        setUserId(null);
+        setActiveTab('calculator');
+      } catch (error) {
+        console.error("Error signing out: ", error);
+        setUser(null);
+        setActiveTab('calculator');
+      }
     }
   };
 
-  const addTransaction = (newTransaction: Omit<Transaction, 'id' | 'date'>) => {
-    const transaction: Transaction = {
+  const addTransaction = async (newTransaction: Omit<Transaction, 'id' | 'date'>) => {
+    const transactionData = {
       ...newTransaction,
-      id: Date.now(),
       date: new Date().toISOString(),
+      userId: userId,
+      type: 'expense' // Explicitly set type if missing, though it comes from Calculator
     };
-    setTransactions((prev) => [...prev, transaction]);
-    setActiveTab('transactions');
+
+    if (userId && !isDemo) {
+      try {
+        await addDoc(collection(db, "transactions"), transactionData);
+        setActiveTab('transactions');
+      } catch (e) {
+        console.error("Error adding document: ", e);
+        alert("Failed to save transaction to cloud.");
+      }
+    } else {
+      // Demo mode
+      const transaction: Transaction = {
+        ...transactionData,
+        id: Date.now(), // Local ID
+        type: 'expense' as const
+      };
+      setTransactions((prev) => [transaction, ...prev]);
+      setActiveTab('transactions');
+    }
   };
 
   if (loading) {
