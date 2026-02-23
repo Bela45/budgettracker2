@@ -1,0 +1,5 @@
+{
+  "name": "Budget Tracker & Expenses",
+  "description": "A personal finance app to track expenses, manage budget, and view insights with a calculator and charts.",
+  "requestFramePermissions": []
+}
