@@ -258,7 +258,7 @@ export default function App() {
   }
 
   return (
-    <div className="w-full max-w-[450px] bg-white rounded-[20px] shadow-[0_10px_40px_rgba(0,0,0,0.1)] overflow-hidden min-h-[600px] flex flex-col">
+    <div className="w-full h-full sm:h-auto sm:max-w-[450px] bg-white sm:rounded-[20px] shadow-none sm:shadow-[0_10px_40px_rgba(0,0,0,0.1)] overflow-hidden min-h-screen sm:min-h-[600px] flex flex-col">
       {/* Header */}
       <div className="bg-[#ffd93d] p-5 flex justify-between items-center shadow-sm z-10">
         <h2 className="text-gray-800 text-xl font-bold m-0">Budget Central Tracker</h2>

@@ -10,8 +10,15 @@ body {
   min-height: 100vh;
   display: flex;
   justify-content: center;
-  align-items: center;
-  padding: 20px;
+  align-items: flex-start; /* Changed from center to allow scrolling if needed */
+  padding: 0; /* Remove padding for mobile */
+}
+
+@media (min-width: 640px) {
+  body {
+    align-items: center;
+    padding: 20px;
+  }
 }
 
 /* Custom scrollbar for better aesthetics in the container */
