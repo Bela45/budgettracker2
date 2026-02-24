@@ -68,10 +68,11 @@ export default function App() {
   useEffect(() => {
     if (userId && !isDemo) {
       // Firestore mode
+      // Note: Removed orderBy("date", "desc") to avoid needing a composite index.
+      // Sorting is handled client-side below.
       const q = query(
         collection(db, "transactions"),
-        where("userId", "==", userId),
-        orderBy("date", "desc") // Ensure you have an index for this if needed, or sort client-side if small data
+        where("userId", "==", userId)
       );
 
       const unsubscribe = onSnapshot(q, (snapshot) => {
@@ -85,16 +86,15 @@ export default function App() {
             amount: data.amount,
             memo: data.memo,
             date: data.date,
-            type: data.type,
+            type: data.type || 'expense', // Default to expense if missing
             userId: data.userId
           });
         });
-        // Sort again just in case or if index is missing/failed
+        // Sort client-side
         loadedTransactions.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
         setTransactions(loadedTransactions);
       }, (error) => {
         console.error("Error fetching transactions: ", error);
-        // Fallback or error handling
       });
 
       return () => unsubscribe();
